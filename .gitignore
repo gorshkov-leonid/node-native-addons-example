@@ -2,3 +2,5 @@
 /electon-example/build
 /native-addon-cmath/node_modules
 /native-addon-cmath/build
+/electron-webpack-ts-builder-example/dist
+/electron-webpack-ts-builder-example/node_modules
