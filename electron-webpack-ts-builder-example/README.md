@@ -1,5 +1,17 @@
 # copied from [`electron-webpack-quick-start`](https://github.com/electron-userland/electron-webpack-quick-start).
- 
+
+## Build `native-addon-cmath`
+* npm install --global --production windows-build-tools
+If you have problem,  try to run it manually from C:\Users\{user}\.windows-build-tools
+* npm install -g node-gyp  
+* npm install 
+
+## Build `electron-webpack-ts-builder-example`
+* npm install
+* .\node_modules\.bin\electron-rebuild.cmd
+* npm run dist
+
+
 # electron-webpack-quick-start
 > A bare minimum project structure to get started developing with [`electron-webpack`](https://github.com/electron-userland/electron-webpack).
 
