@@ -17,8 +17,8 @@
     "electron": "2.0.7",
     "electron-builder": "^20.28.1",
     "electron-rebuild": "^1.8.2",
-    "electron-webpack": "^2.3.1",
-    "electron-webpack-ts": "^2.1.1",
+    "electron-webpack": "^2.4.0",
+    "electron-webpack-ts": "^3.0.0",
     "typescript": "^3.1.6",
     "webpack": "^4.24.0"
   },
