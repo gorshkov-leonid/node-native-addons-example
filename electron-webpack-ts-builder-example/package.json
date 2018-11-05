@@ -9,18 +9,18 @@
     "dist:dir": "yarn dist --dir -c.compression=store -c.mac.identity=null"
   },
   "dependencies": {
+    "cmath": "^1.0.2",
     "source-map-support": "^0.5.9",
-    "yarn": "^1.12.1",
-    "cmath": "1.0.2"
+    "yarn": "^1.12.1"
   },
   "devDependencies": {
     "electron": "2.0.7",
-    "electron-builder": "^20.28.1",
+    "electron-builder": "20.28.1",
     "electron-rebuild": "^1.8.2",
     "electron-webpack": "^2.4.0",
     "electron-webpack-ts": "^3.0.0",
     "typescript": "^3.1.6",
-    "webpack": "^4.24.0"
+    "webpack": "^4.25.1"
   },
   "resolutions": {
     "upath": "^1.1.0"
