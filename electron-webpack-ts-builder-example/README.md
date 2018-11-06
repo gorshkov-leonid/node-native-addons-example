@@ -15,7 +15,7 @@
 
 ## Build `electron-webpack-ts-builder-example`
 * npm install --registry http://localhost:4873
-* .\node_modules\.bin\electron-rebuild.cmd
+* .\node_modules\\.bin\electron-rebuild.cmd
 * npm run dist
 
 
