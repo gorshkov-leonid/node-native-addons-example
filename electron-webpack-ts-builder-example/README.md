@@ -1,24 +1,11 @@
-# copied from [`electron-webpack-quick-start`](https://github.com/electron-userland/electron-webpack-quick-start).
-
-## Install `verdaccio`
-* npm install -g verdaccio 
-* verdaccio
-* npm adduser --registry http://localhost:4873
-
-## Build `native-addon-cmath`
-* npm install --global --production windows-build-tools
-
-> If you have problem,  try to run it manually from C:\Users\{user}\.windows-build-tools
-* npm install -g node-gyp  
-* npm install 
-* npm publish --registry http://localhost:4873
-
 ## Build `electron-webpack-ts-builder-example`
-* npm install --registry http://localhost:4873
+* npm install
 * .\node_modules\\.bin\electron-rebuild.cmd
 * npm run dist
 
-
+----------------------------
+# copied from [`electron-webpack-quick-start`](https://github.com/electron-userland/electron-webpack-quick-start).
+----------------------------
 # electron-webpack-quick-start
 > A bare minimum project structure to get started developing with [`electron-webpack`](https://github.com/electron-userland/electron-webpack).
 
