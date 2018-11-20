@@ -2,7 +2,13 @@
   "targets": [
     {
       "target_name": "cmath",
-      "sources": [ "cmath.cpp" ]
+      "cflags!": [ "-fno-exceptions" ],
+      "cflags_cc!": [ "-fno-exceptions" ],
+      "sources": [ "cmath.cc" ],
+      "include_dirs": [
+        "<!@(node -p \"require('node-addon-api').include\")"
+      ],
+      'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
     }
   ]
 }
