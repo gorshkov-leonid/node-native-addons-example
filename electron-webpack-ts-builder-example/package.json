@@ -6,10 +6,12 @@
     "dev": "electron-webpack dev",
     "compile": "electron-webpack",
     "dist": "yarn compile && electron-builder",
+	"postinstall": "electron-builder install-app-deps",
     "dist:dir": "yarn dist --dir -c.compression=store -c.mac.identity=null"
   },
   "dependencies": {
     "cmath": "file://../native-addon-cmath",
+    "hooker": "file://../native-addon-hooker",
     "source-map-support": "^0.5.9",
     "yarn": "^1.12.1"
   },
