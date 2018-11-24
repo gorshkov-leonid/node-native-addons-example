@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <Winuser.h>
 #include <iostream>
+#include <thread>
+#include <Psapi.h>
 
 using namespace std;
 
@@ -19,10 +21,35 @@ LRESULT MouseLLHookCallback(
 {
 	if (nCode >= 0)
 	{
+		
 		MSLLHOOKSTRUCT * cp = (MSLLHOOKSTRUCT*)lParam;
 		if (wParam == WM_LBUTTONDOWN) 
 		{
 			//MessageBox(NULL, TEXT("mouse click"), TEXT("mouse click"), MB_OK); 
+			std::thread::id this_id = std::this_thread::get_id();
+			//HANDLE handle = std::this_thread::native_handle();
+			HANDLE handle = GetCurrentThread();
+			DWORD pId = GetProcessIdOfThread(handle);
+  		    HANDLE pHandle = OpenProcess(
+				PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+				FALSE,
+				pId /* This is the PID, you can find one from windows task manager */
+			);
+		    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_QUERY_INFORMATION |
+			  PROCESS_VM_READ,
+			  FALSE, pId);
+			if (NULL != hProcess) {
+			  TCHAR nameProc[1024];
+			  if (GetProcessImageFileNameA(hProcess, nameProc, sizeof(nameProc) / sizeof( * nameProc)) == 0) {
+				std::cout << "GetProcessImageFileName Error"<< std::endl;
+			  } else {
+				std::wcout << "thread " << this_id << ", " << "pId " << pId << ", pName " << nameProc << std::endl;
+			  }
+
+			} else {
+			  printf("OpenProcess(%i) failed, error: %i\n",
+				pId, (int) GetLastError());
+			}
 			std::cout << "mouse click"<< std::endl;
 		}
 	}
