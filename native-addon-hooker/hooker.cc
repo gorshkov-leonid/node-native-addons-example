@@ -90,7 +90,9 @@ static DWORD WINAPI HooksMessageLoop( LPVOID )
 
 static void ClickCallback( const Napi::CallbackInfo& info )
 {
-	std::cout << "########### ClickCallback" << std::endl;
+	 Napi::String arg = info[0].As<Napi::String>();
+	
+	std::cout << "########### ClickCallback " << arg.Utf8Value()  << std::endl;
 }
 
 static void CallJs(napi_env napiEnv, napi_value napi_js_cb, void* context, void* data) {
