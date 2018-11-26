@@ -93,10 +93,12 @@ static void ClickCallback( const Napi::CallbackInfo& info )
 	std::cout << "########### ClickCallback" << std::endl;
 }
 
-static void CallJs(napi_env env, napi_value js_cb, void* context, void* data) {
+static void CallJs(napi_env napiEnv, napi_value napi_js_cb, void* context, void* data) {
 	Message m = *((Message*)data);
-	std::cout << "########### CallJs  " << m.data.c_str()<< std::endl;
-	
+	Napi::Env env = Napi::Env(napiEnv);
+	Napi::String jsCallbackParameter = Napi::String::New(env, m.data);
+	Napi::Function js_cb = Napi::Value(env, napi_js_cb).As<Napi::Function>();
+	js_cb.Call(env.Global(), { jsCallbackParameter });
 }
 
 static void ExecuteWork(napi_env env, void* data) {
