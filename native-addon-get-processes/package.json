@@ -1,0 +1,14 @@
+{
+  "name": "getProcesses",
+  "version": "1.0.0",
+  "description": "",
+  "main": "getProcesses.js",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "gypfile": true,
+  "dependencies": {
+    "bindings": "^1.3.0",
+    "node-addon-api": "^1.6.0"
+  }
+}
