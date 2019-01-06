@@ -7,9 +7,21 @@
 #include <iostream>
 #include<set>
 #include<map>
+#include <tlhelp32.h>
 
 #include <napi.h> //c++ node-addon-api that uses c-ish n-api headers inside
 
+/*
+https://toster.ru/q/55778
+https://docs.microsoft.com/en-gb/windows/desktop/winmsg/window-functions
+https://docs.microsoft.com/en-us/windows/desktop/psapi/enumerating-all-processes
+https://thispointer.com/stdset-tutorial-part-1-set-usage-details-with-default-sorting-criteria/
+https://ru.cppreference.com/w/cpp/container/set
+https://thispointer.com/multimap-example-and-tutorial-in-c/
+https://thispointer.com/finding-all-values-for-a-key-in-multimap-using-equals_range-example/  !!!
+https://en.cppreference.com/w/cpp/container/multimap/equal_range !!!
+https://github.com/Microsoft/vscode-windows-process-tree
+*/
 
 using namespace std;
 
@@ -19,14 +31,45 @@ typedef struct {
 } EnumWndProcData;
 
 typedef struct {
-  TCHAR* processName;
-  TCHAR* fileName;
+  TCHAR processName[MAX_PATH];
 } ProcInfo;
+
+struct ProcRelation {
+  DWORD pid;
+  DWORD ppid;
+};
+
+std::map<DWORD,ProcRelation> GetProcessRelations() {
+  std::map<DWORD,ProcRelation> processInfos;
+	
+  // Fetch the PID and PPIDs
+  PROCESSENTRY32 process_entry = { 0 };
+  DWORD parent_pid = 0;
+  HANDLE snapshot_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  process_entry.dwSize = sizeof(PROCESSENTRY32);
+  if (Process32First(snapshot_handle, &process_entry)) {
+    do {
+      if (process_entry.th32ProcessID != 0) {
+		  
+		  ProcRelation procInfo = { 
+		      process_entry.th32ProcessID, 
+		      process_entry.th32ParentProcessID 
+          };
+		  
+		  processInfos.insert(std::pair<DWORD, ProcRelation>(process_entry.th32ProcessID, procInfo));
+		  
+      }
+    } while (Process32Next(snapshot_handle, &process_entry));
+  }
+  
+  CloseHandle(snapshot_handle);
+  return processInfos;
+}
+
 
 ProcInfo* GetProcessInfo( DWORD processID )
 {
     TCHAR szProcessName[MAX_PATH] = TEXT("<?>");
-	TCHAR szFileName[MAX_PATH + 1] = TEXT("<?>");
 
     HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
                                    PROCESS_VM_READ,
@@ -36,22 +79,21 @@ ProcInfo* GetProcessInfo( DWORD processID )
         HMODULE hMod;
         DWORD cbNeeded;
 
+		ProcInfo procInfo = {};
+		
         if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), &cbNeeded) )
         {
-            GetModuleBaseName( hProcess, hMod, szProcessName, sizeof(szProcessName)/sizeof(TCHAR) );
-			GetModuleFileName(hMod, szFileName, MAX_PATH + 1);
+            GetModuleBaseName( hProcess, hMod, procInfo.processName, sizeof(procInfo.processName)/sizeof(TCHAR) );
+			
+			
         }
-		
-		ProcInfo procInfo = {};
-	    procInfo.processName = szProcessName;
-	    procInfo.fileName = szFileName;
 		CloseHandle( hProcess );
 		return &procInfo;
     }
-    return NULL;
-    // Print the process name and identifier.
     //std::cout << "hook has been already added!"<< std::endl;
     //_tprintf( TEXT("%s %s (PID: %u)\n"), szProcessName, szFileName, processID );
+
+    return NULL;
 }
 
 BOOL CALLBACK enum_wnd_proc(HWND hwnd, LPARAM lParam)
@@ -81,25 +123,14 @@ BOOL CALLBACK enum_wnd_proc(HWND hwnd, LPARAM lParam)
 }
 
 
-
-
-/*
-https://toster.ru/q/55778
-https://docs.microsoft.com/en-gb/windows/desktop/winmsg/window-functions
-https://docs.microsoft.com/en-us/windows/desktop/psapi/enumerating-all-processes
-https://thispointer.com/stdset-tutorial-part-1-set-usage-details-with-default-sorting-criteria/
-https://ru.cppreference.com/w/cpp/container/set
-https://thispointer.com/multimap-example-and-tutorial-in-c/
-https://thispointer.com/finding-all-values-for-a-key-in-multimap-using-equals_range-example/  !!!
-https://en.cppreference.com/w/cpp/container/multimap/equal_range !!!
-https://github.com/Microsoft/vscode-windows-process-tree
-*/
 Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 	
     EnumWndProcData enumWndProcData = {};
 	EnumWindows(enum_wnd_proc, (LPARAM)(&enumWndProcData));
 	std::multimap<DWORD,HWND> processIdToHandles = enumWndProcData.processIdToHandles;
+	
+	auto processRelations = GetProcessRelations();
 	
 	for(std::multimap<DWORD, HWND>::iterator it = processIdToHandles.begin(), end = processIdToHandles.end(); it != end; it = processIdToHandles.upper_bound(it->first))
     {
@@ -108,8 +139,15 @@ Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
 	  if(procInfo)
 	  {
 		  TCHAR* processName = procInfo -> processName;
-		  TCHAR* fileName = procInfo -> fileName;
-		  std::cout << windowProcessId << " " << processName << " " << fileName << std::endl;
+		  
+	      DWORD parentPid = 0; 
+		  
+	      auto it = processRelations.find(windowProcessId);
+          if( it != processRelations.end() ) {
+		     parentPid = (it->second).ppid;
+          }
+		  
+		  std::cout << "pid: " << windowProcessId << ", parentPid: " << parentPid << ", name: " << processName << std::endl;
 	  
 		  auto handleRange = processIdToHandles.equal_range(windowProcessId);
 		  for (auto i = handleRange.first; i != handleRange.second; ++i)
@@ -119,23 +157,9 @@ Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
 		  }
 	  }
     }
-  
-    /*
-    for (std::pair<DWORD, HWND>  processIdToHandle : processIdToHandles)
-	{
-		DWORD windowProcessId = processIdToHandle.first;
-		DWORD windowHandle = processIdToHandle.second;
-		
-		PrintProcessNameAndID(windowProcessId);  
-		std::cout << windowProcessId << " :: " << processIdToHandle << std::endl;
-	}
-	*/	
 	
 	return env.Undefined();
 }
-
-
-
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "getProcessesList"), Napi::Function::New(env, GetProcessesList));

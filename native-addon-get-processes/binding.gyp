@@ -2,7 +2,7 @@
   "targets": [
     {
       "target_name": "getProcesses",
-      "cflags!": [ "-fno-exceptions" ],
+      "cflags!": [ "-fno-exceptions"],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [ "getProcesses.cc"],
       "include_dirs": [
