@@ -21,6 +21,9 @@ https://thispointer.com/multimap-example-and-tutorial-in-c/
 https://thispointer.com/finding-all-values-for-a-key-in-multimap-using-equals_range-example/  !!!
 https://en.cppreference.com/w/cpp/container/multimap/equal_range !!!
 https://github.com/Microsoft/vscode-windows-process-tree
+
+
+!!!! https://stackoverflow.com/questions/6202547/win32-get-main-wnd-handle-of-application
 */
 
 using namespace std;
@@ -83,9 +86,7 @@ ProcInfo* GetProcessInfo( DWORD processID )
 		
         if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), &cbNeeded) )
         {
-            GetModuleBaseName( hProcess, hMod, procInfo.processName, sizeof(procInfo.processName)/sizeof(TCHAR) );
-			
-			
+            GetModuleBaseName( hProcess, hMod, procInfo.processName, sizeof(procInfo.processName)/sizeof(TCHAR) + 1 );
         }
 		CloseHandle( hProcess );
 		return &procInfo;
@@ -134,6 +135,7 @@ Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
 	
 	for(std::multimap<DWORD, HWND>::iterator it = processIdToHandles.begin(), end = processIdToHandles.end(); it != end; it = processIdToHandles.upper_bound(it->first))
     {
+	  std::cout << "-----------------" << std::endl;  		  
 	  DWORD windowProcessId = it->first;
 	  ProcInfo* procInfo = GetProcessInfo(windowProcessId);
 	  if(procInfo)
@@ -148,13 +150,45 @@ Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
           }
 		  
 		  std::cout << "pid: " << windowProcessId << ", parentPid: " << parentPid << ", name: " << processName << std::endl;
-	  
+		  
+		  //todo: walking by processes only and collect root but not explorer.exe. And on click call GetTopWindow for used process (?)
+		  //      How does Task Manager categorize processes as App, Background Process, or Windows Process? https://blogs.msdn.microsoft.com/oldnewthing/20171219-00/?p=97606 
+		  //      https://stackoverflow.com/questions/53509063/explorer-exe-as-the-parent-process-in-windows
+		  //      http://blogs.microsoft.co.il/pavely/2011/06/18/getshellwindow-vs-getdesktopwindow/
+		  
+	      //temporary: 
 		  auto handleRange = processIdToHandles.equal_range(windowProcessId);
+		  
+		  std::set<HWND> handles;
 		  for (auto i = handleRange.first; i != handleRange.second; ++i)
 		  {
 			  HWND windowHandle = i->second;
-			  std::cout << "             " << windowHandle << std::endl;		  
+			  //HWND parentHandle = GetAncestor(windowHandle, GA_PARENT);
+			  //HWND rootHandle = GetAncestor(windowHandle, GA_ROOT);
+			  HWND rootOwnerHandle = GetAncestor(windowHandle, GA_ROOTOWNER);
+
+              if(handles.find(rootOwnerHandle) != handles.end())
+              {
+                continue;
+              }
+			  
+			  
+			  BOOL isWindow = IsWindow(rootOwnerHandle);
+			  //handles.insert(windowHandle);
+			  //handles.insert(parentHandle);
+			  //handles.insert(rootHandle);
+		      if(isWindow)
+			  {
+				handles.insert(rootOwnerHandle);  
+			  }
 		  }
+		  
+		  for(auto handle : handles) {
+			  
+			  TCHAR windowHandleText[MAX_PATH];
+			  GetWindowText(handle, windowHandleText,  sizeof(windowHandleText) / sizeof(TCHAR) + 1 );			  
+			  std::cout << "             " << handle << " " << windowHandleText << std::endl;		
+		  }    
 	  }
     }
 	
