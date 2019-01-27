@@ -42,6 +42,39 @@ struct ProcRelation {
   DWORD ppid;
 };
 
+// http://stackoverflow.com/questions/7277366/why-does-enumwindows-return-more-windows-than-i-expected
+BOOL IsAltTabWindow1(HWND hwnd)
+{
+  TITLEBARINFO ti;
+  HWND hwndTry, hwndWalk = NULL;
+
+  if (!IsWindowVisible(hwnd))
+    return FALSE;
+  hwndTry = GetAncestor(hwnd, GA_ROOTOWNER);
+  while (hwndTry != hwndWalk)
+  {
+    hwndWalk = hwndTry;
+    hwndTry = GetLastActivePopup(hwndWalk);
+    if (IsWindowVisible(hwndTry))
+      break;
+  }
+  if (hwndWalk != hwnd)
+    return FALSE;
+
+  // the following removes some task tray programs and "Program Manager"
+  ti.cbSize = sizeof(ti);
+  GetTitleBarInfo(hwnd, &ti);
+  if (ti.rgstate[0] & STATE_SYSTEM_INVISIBLE && !(ti.rgstate[0] & STATE_SYSTEM_FOCUSABLE))
+    return FALSE;
+
+  // Tool windows should not be displayed either, these do not appear in the
+  // task bar.
+  if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
+    return FALSE;
+
+  return TRUE;
+}
+
 std::map<DWORD,ProcRelation> GetProcessRelations() {
   std::map<DWORD,ProcRelation> processInfos;
 	
@@ -100,6 +133,10 @@ ProcInfo* GetProcessInfo( DWORD processID )
 BOOL CALLBACK enum_wnd_proc(HWND hwnd, LPARAM lParam)
 {
   
+  if (!IsAltTabWindow1(hwnd)) {
+        return TRUE;
+  }
+  
   DWORD windowProcessId = 0;
   GetWindowThreadProcessId(hwnd, &windowProcessId);
   //std::cout << hwnd << "  " << windowProcessId << std::endl;
@@ -124,8 +161,73 @@ BOOL CALLBACK enum_wnd_proc(HWND hwnd, LPARAM lParam)
 }
 
 
+
+void PrintProcessNameAndID( DWORD processID )
+{
+    TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
+
+    // Get a handle to the process.
+
+    HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
+                                   PROCESS_VM_READ,
+                                   FALSE, processID );
+
+    // Get the process name.
+
+    if (NULL != hProcess )
+    {
+        HMODULE hMod;
+        DWORD cbNeeded;
+
+        if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
+             &cbNeeded) )
+        {
+            GetModuleBaseName( hProcess, hMod, szProcessName, 
+                               sizeof(szProcessName)/sizeof(TCHAR) );
+        }
+    }
+
+    // Print the process name and identifier.
+
+    _tprintf( TEXT("%s  (PID: %u)\n"), szProcessName, processID );
+
+    // Release the handle to the process.
+
+    CloseHandle( hProcess );
+}
+
+
 Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
+	
+	
+	
+	 DWORD aProcesses[1024], cbNeeded, cProcesses;
+    unsigned int i;
+
+    if ( !EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
+    {
+        return  env.Undefined();
+    }
+
+
+    // Calculate how many process identifiers were returned.
+
+    cProcesses = cbNeeded / sizeof(DWORD);
+
+    // Print the name and process identifier for each process.
+
+    for ( i = 0; i < cProcesses; i++ )
+    {
+        if( aProcesses[i] != 0 )
+        {
+            PrintProcessNameAndID( aProcesses[i] );
+        }
+    }
+
+	
+	
+	
 	
     EnumWndProcData enumWndProcData = {};
 	EnumWindows(enum_wnd_proc, (LPARAM)(&enumWndProcData));
@@ -195,11 +297,13 @@ Napi::Value GetProcessesList(const Napi::CallbackInfo& info) {
 	return env.Undefined();
 }
 
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
+Napi::Object InitGetProcesses(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "getProcessesList"), Napi::Function::New(env, GetProcessesList));
     return exports;
 }
-NODE_API_MODULE(getProcesses, Init)
+NODE_API_MODULE(getProcesses, InitGetProcesses);
+
+
 
 
 
