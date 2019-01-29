@@ -133,6 +133,7 @@ class GetWindowListWorker : public AsyncWorker {
 		obj.Set("exeFullName",  Napi::String::New(env, capture->exeFullName));
 
 		result.Set(i, obj);
+		delete capture;
         i++;
       }
       Callback().MakeCallback(env.Global(), { result });
