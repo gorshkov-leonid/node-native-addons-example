@@ -180,9 +180,9 @@ static void CallJs(napi_env napiEnv, napi_value napi_js_cb, void* context, void*
 	jsCaptureInfo.Set("clickX",   Napi::Number::New(env, capture.clickX));
 	jsCaptureInfo.Set("clickY", Napi::Number::New(env, capture.clickY));
 	jsCaptureInfo.Set("zoneX",   Napi::Number::New(env, capture.zoneX));
-	jsCaptureInfo.Set("zoneX", Napi::Number::New(env, capture.zoneX));
+	jsCaptureInfo.Set("zoneY", Napi::Number::New(env, capture.zoneY));
 	jsCaptureInfo.Set("zoneWidth",   Napi::Number::New(env, capture.zoneWidth));
-	jsCaptureInfo.Set("zoneWidth", Napi::Number::New(env, capture.zoneWidth));
+	jsCaptureInfo.Set("zoneHeight", Napi::Number::New(env, capture.zoneHeight));
 	
 	Napi::Function js_cb = Napi::Value(env, napi_js_cb).As<Napi::Function>();
 	js_cb.Call(env.Global(), { jsCaptureInfo });
