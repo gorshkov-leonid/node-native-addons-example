@@ -1,4 +1,6 @@
 var hooker = require('./hooker.js');
-hooker.addHook();
-setTimeout(()=>hooker.removeHook(), 10000);
+hooker.addHook(function(obj){
+	console.log(obj);
+}, 10376);
+setTimeout(()=>hooker.removeHook(), 60000);
 
