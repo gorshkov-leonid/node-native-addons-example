@@ -70,10 +70,6 @@ static DWORD getWindowProcessId(HWND handle)
     return procId;
 }
 
-static HWND getRootWindowHandle(HWND hwnd)
-{
-   return GetAncestor(hwnd, GA_ROOTOWNER);
-}
 
 //https://code.i-harness.com/en/q/1cd25f
 HWND FindTopWindow(DWORD pid)
@@ -103,6 +99,20 @@ HWND FindTopWindow(DWORD pid)
     return 0;
 }
 
+//static void printWindowText(HWND hwnd){
+//   int cTxtLen; 
+//   PSTR pszMem; 
+//   cTxtLen = GetWindowTextLength(hwnd); 
+//
+//   pszMem = (PSTR) VirtualAlloc((LPVOID) NULL, 
+//       (DWORD) (cTxtLen + 1), MEM_COMMIT, 
+//       PAGE_READWRITE); 
+//   GetWindowText(hwnd, pszMem, 
+//       cTxtLen + 1); 
+//	cout<< "!!!!!!!!!!! " << pszMem << std::endl;
+//}
+
+
 LRESULT MouseLLHookCallback(
 		_In_ int    nCode,
 		_In_ WPARAM wParam,
@@ -128,10 +138,11 @@ LRESULT MouseLLHookCallback(
 			{
 				RECT controlRect = getRect(controlHandle);
 				
-				HWND rootWindowHandle = getRootWindowHandle(controlHandle);
+				HWND rootWindowHandle = GetAncestor(controlHandle, GA_ROOTOWNER);
 				RECT topWindowRect = getRect(rootWindowHandle);
 				
-				HWND activeMainWindowHandle = FindTopWindow(activeMainWindowProcessId);
+				
+				HWND activeMainWindowHandle =  GetAncestor(controlHandle, GA_ROOT);
 				RECT mainWindowRect = getRect(activeMainWindowHandle);
             
 				LONG clickX = (pt.x - mainWindowRect.left);
