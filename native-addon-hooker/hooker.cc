@@ -5,6 +5,7 @@
 #include <thread>
 #include <Psapi.h>
 #include <assert.h>
+#include <vector>
 
 #define NAPI_EXPERIMENTAL
 #include <napi.h> //c++ node-addon-api that uses c-ish n-api headers inside
@@ -29,25 +30,14 @@ class CaptureInfo
   public:
     LONG clickX = 0;
     LONG clickY = 0;
-    LONG zoneX = 0;
-    LONG zoneY = 0;
-    LONG zoneWidth = 0;
-    LONG zoneHeight = 0;
-
+	std::vector<RECT> rectHierarchy = {};
+	
     CaptureInfo(
         LONG _clickX,
-        LONG _clickY,
-        LONG _zoneX,
-        LONG _zoneY,
-        LONG _zoneWidth,
-        LONG _zoneHeight
+        LONG _clickY
 	){
 	   clickX = _clickX;	
 	   clickY = _clickY;
-       zoneX = _zoneX;
-       zoneY = _zoneY;
-       zoneWidth = _zoneWidth;
-	   zoneHeight = _zoneHeight;
 	}
 };
 
@@ -145,21 +135,20 @@ LRESULT MouseLLHookCallback(
 				HWND activeMainWindowHandle =  GetAncestor(controlHandle, GA_ROOT);
 				RECT mainWindowRect = getRect(activeMainWindowHandle);
             
-				LONG clickX = (pt.x - mainWindowRect.left);
-                LONG clickY = (pt.y - mainWindowRect.top);
-                LONG zoneX = (controlRect.left - mainWindowRect.left);
-                LONG zoneY = (controlRect.top - mainWindowRect.top);
-                LONG zoneWidth = controlRect.right - controlRect.left;
-                LONG zoneHeight = controlRect.bottom - controlRect.top;
-
-				CaptureInfo capture (
+				LONG clickX = pt.x;
+                LONG clickY = pt.y;
+                CaptureInfo capture (
 				    clickX, 
-				    clickY, 
-				    zoneX, 
-				    zoneY, 
-				    zoneWidth, 
-				    zoneHeight 
+				    clickY
 				);
+				
+				capture.rectHierarchy.push_back(controlRect);
+				capture.rectHierarchy.push_back(mainWindowRect);
+				if(activeMainWindowHandle != rootWindowHandle)
+				{
+				   capture.rectHierarchy.push_back(topWindowRect);
+				}
+				
 		        clicksQueue.write(capture);  
 			}
 		}
@@ -187,13 +176,25 @@ static void CallJs(napi_env napiEnv, napi_value napi_js_cb, void* context, void*
 	CaptureInfo capture = *((CaptureInfo*)data);
 	Napi::Env env = Napi::Env(napiEnv);
 	
+	Napi::Array rects = Napi::Array::New(env);
+	
+	int i = 0;
+	for (std::vector<RECT>::iterator it = capture.rectHierarchy.begin() ; it != capture.rectHierarchy.end(); ++it)
+	{
+		RECT rect = *it;
+		Napi::Object jsRect = Napi::Object::New(env);
+	    jsRect.Set("x",   Napi::Number::New(env, rect.left));
+	    jsRect.Set("y", Napi::Number::New(env, rect.top));
+	    jsRect.Set("width",   Napi::Number::New(env, rect.right - rect.left));
+	    jsRect.Set("height", Napi::Number::New(env, rect.bottom - rect.top));
+		rects.Set(i, jsRect);
+		i++;
+	}
+
     Napi::Object jsCaptureInfo = Napi::Object::New(env);
 	jsCaptureInfo.Set("clickX",   Napi::Number::New(env, capture.clickX));
 	jsCaptureInfo.Set("clickY", Napi::Number::New(env, capture.clickY));
-	jsCaptureInfo.Set("zoneX",   Napi::Number::New(env, capture.zoneX));
-	jsCaptureInfo.Set("zoneY", Napi::Number::New(env, capture.zoneY));
-	jsCaptureInfo.Set("zoneWidth",   Napi::Number::New(env, capture.zoneWidth));
-	jsCaptureInfo.Set("zoneHeight", Napi::Number::New(env, capture.zoneHeight));
+	jsCaptureInfo.Set("rects", rects);
 	
 	Napi::Function js_cb = Napi::Value(env, napi_js_cb).As<Napi::Function>();
 	js_cb.Call(env.Global(), { jsCaptureInfo });
