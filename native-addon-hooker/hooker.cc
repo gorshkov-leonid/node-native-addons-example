@@ -1,3 +1,4 @@
+// todo https://github.com/nodejs/node-addon-api/blob/main/doc/async_worker_variants.md
 #include <Windows.h>
 #include <Windowsx.h>
 #include <Winuser.h>
