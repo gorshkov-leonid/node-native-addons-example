@@ -1,9 +1,22 @@
-node_modules
-/electon-example/build
-/native-addon-cmath/build
-/native-addon-hooker/build
-/electron-webpack-ts-builder-example/dist
-/electron-webpack-ts-builder-example/build/*.gypi
+# Idea #
+##################
+*/*.iml
+*/*.ipr
+*/*.iws
+*/.idea/
+
+*/node_modules/
+*/cmake-build-debug/
+*/build/
+
+
+## trash
+/cpp_example
+/native-addon-hooker_old
+
 /native-addon-cmath/bin
-/native-addon-get-processes/build
 /native-addon-hooker/bin
+
+/electron-webpack-ts-builder-example/dist
+!/electron-webpack-ts-builder-example/build/
+/electron-webpack-ts-builder-example/build/*.gypi
