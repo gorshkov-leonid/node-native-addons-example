@@ -7,6 +7,7 @@
 
 ## Support in Intellij Clion
 * `node-gyp configure -- -f cmake`
+* `node-gyp configure --debug`
 * Edit `build/Debug/CMakeLists.txt` and  `build/Release/CMakeLists.txt`
     * Replace `\\` and `\` with `/`
     * Add `../../prtscn_windows.cpp` to `screener__cxx_srcs` list
