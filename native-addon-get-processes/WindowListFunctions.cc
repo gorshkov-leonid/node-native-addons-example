@@ -120,8 +120,8 @@ BOOL IsWindowBlacklisted(CaptureEntity *capture) {
 }
 
 
-bool WindowListComparator(CaptureEntity* left, CaptureEntity* right) {
-  return left->windowName.compare(right->windowName) < 0;
+bool WindowListComparator(CaptureEntity *left, CaptureEntity *right) {
+    return left->windowName.compare(right->windowName) < 0;
 }
 
 class GetWindowListWorker : public AsyncWorker {
@@ -174,64 +174,48 @@ public:
     } *lpTranslate;
 
     // https://stackoverflow.com/questions/64321036/c-win32-getting-app-name-using-pid-and-executable-path
+    // todo use WideCharToMultiByte
     std::string GetApplicationName(DWORD pid) {
-        cout << "AAA 1\n";
         HANDLE handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-        cout << "AAA 2\n";
         if (!handle) return ""s;
-        cout << "AAA 3\n";
         wchar_t pszFile[MAX_PATH] = L"";
-        cout << "AAA 4\n";
         DWORD len = MAX_PATH;
-        cout << "AAA 5\n";
         QueryFullProcessImageNameW(handle, 0, pszFile, &len);
-        cout << "AAA 6\n";
         UINT dwBytes, cbTranslate;
-        cout << "AAA 7\n";
         DWORD dwSize = GetFileVersionInfoSizeW(pszFile, (DWORD * ) & dwBytes);
-        cout << "AAA 8\n";
         if (dwSize == 0) return ""s;
-        cout << "AAA 9\n";
         LPVOID lpData = (LPVOID) malloc(dwSize);
-        cout << "AAA 10\n";
         std::string result;
-        cout << "AAA 11\n";
         ZeroMemory(lpData, dwSize);
-        cout << "AAA 12\n";
         if (GetFileVersionInfoW(pszFile, 0, dwSize, lpData)) {
-            cout << "AAA 13\n";
+            HRESULT hr;
             VerQueryValueW(lpData,
                            L"\\VarFileInfo\\Translation",
                            (LPVOID * ) & lpTranslate,
                            &cbTranslate);
-            cout << "AAA 14\n";
             wchar_t strSubBlock[MAX_PATH] = {0};
-            cout << "AAA 15\n";
             wchar_t *lpBuffer;
-            cout << "AAA 16\n";
             for (int i = 0; i < (cbTranslate / sizeof(struct LANGANDCODEPAGE)); i++) {
-                cout << "AAA 17\n";
-                StringCchPrintfW(strSubBlock, 50,
+                hr = StringCchPrintfW(strSubBlock, 50,
                                  L"\\StringFileInfo\\%04x%04x\\FileDescription",
                                  lpTranslate[i].wLanguage,
                                  lpTranslate[i].wCodePage);
-                cout << "AAA 18\n";
+                if (FAILED(hr))
+                {
+                    //todo handle
+                }
+
                 VerQueryValueW(lpData,
                                strSubBlock,
                                (void **) &lpBuffer,
                                &dwBytes);
-                cout << "AAA 19\n";
                 //fixme deprecated
                 std::wstring_convert <std::codecvt_utf8_utf16<wchar_t>> converter;
-                cout << "AAA 20\n";
                 result = converter.to_bytes(lpBuffer);
             }
         }
-        cout << "AAA 21\n";
         if (lpData) free(lpData);
-        cout << "AAA 22\n";
         if (handle) CloseHandle(handle);
-        cout << "AAA 23\n";
         return result;
     }
 
