@@ -33,13 +33,8 @@ module.exports.start = function (processId, screenBytesCallback) {
         // - rect[0] for control, rect[1] for main window, - rect[2] (optional) is for top window
         function (event) {
             console.log(event);
-            try {
-                handleEventSync(event, screenBytesCallback);
-            } catch (e) {
-                console.error(e);
-            }
-
-            //handleEventAsync(event, screenBytesCallback);
+            handleEventSync(event, screenBytesCallback);
+            // handleEventAsync(event, screenBytesCallback);
         },
         processId
     )
@@ -53,6 +48,7 @@ module.exports.stop = function () {
 }
 
 function handleEventSync(event, screenBytesCallback) {
+    const time = new Date().getTime();
     const minx = Math.min(...event.rects.map(rect => rect.x));
     const maxx = Math.max(...event.rects.map(rect => rect.x + rect.width));
     const miny = Math.min(...event.rects.map(rect => rect.y));
@@ -87,10 +83,12 @@ function handleEventSync(event, screenBytesCallback) {
     const bufs = [];
     resPng.on('data', (d) => bufs.push(d));
     resPng.on('end', () => screenBytesCallback(Buffer.concat(bufs)))
+    console.log("--- ", new Date().getTime() - time)
 }
 
-//
+
 // function handleEventAsync(event, screenBytesCallback) {
+//     const time = new Date().getTime();
 //     const minx = Math.min(...event.rects.map(rect => rect.x));
 //     const maxx = Math.max(...event.rects.map(rect => rect.x + rect.width));
 //     const miny = Math.min(...event.rects.map(rect => rect.y));
@@ -119,6 +117,15 @@ function handleEventSync(event, screenBytesCallback) {
 //             })
 //         )
 //     }
+//     promise.then(() => {
+//         resPng = resPng.pack()
+//         const bufs = [];
+//         resPng.on('data', (d) => bufs.push(d));
+//         resPng.on('end', () => {
+//             console.log("--- ", new Date().getTime() - time)
+//             return screenBytesCallback(Buffer.concat(bufs));
+//         })
+//     });
 // }
 
 function debugBorder(png, color) {
