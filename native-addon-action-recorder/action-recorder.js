@@ -34,7 +34,6 @@ module.exports.start = function (processId, screenBytesCallback) {
         function (event) {
             console.log(event);
             handleEventSync(event, screenBytesCallback);
-            // handleEventAsync(event, screenBytesCallback);
         },
         processId
     )
@@ -85,48 +84,6 @@ function handleEventSync(event, screenBytesCallback) {
     resPng.on('end', () => screenBytesCallback(Buffer.concat(bufs)))
     console.log("--- ", new Date().getTime() - time)
 }
-
-
-// function handleEventAsync(event, screenBytesCallback) {
-//     const time = new Date().getTime();
-//     const minx = Math.min(...event.rects.map(rect => rect.x));
-//     const maxx = Math.max(...event.rects.map(rect => rect.x + rect.width));
-//     const miny = Math.min(...event.rects.map(rect => rect.y));
-//     const maxy = Math.max(...event.rects.map(rect => rect.y + rect.height));
-//
-//     let resPng = new PNG({width: maxx - minx, height: maxy - miny});
-//     let promise = Promise.resolve();
-//     let debugColorIndex = debugColors.length - event.rects.length % debugColors.length
-//     for (let rect of event.rects.reverse()) {
-//         promise = promise.then(() =>
-//             new Promise((resolve, reject) => {
-//                 const res = Buffer.from(
-//                     screener.screenshot({
-//                         //pathToSave: `screen_${++debugPathCounter}.png`,
-//                         rect: rect
-//                     })
-//                 );
-//                 Readable.from(Buffer.from(res))
-//                     .pipe(new PNG())
-//                     .on("parsed", function () {
-//                         debugBorder(this, debugColors[debugColors[debugColorIndex++ % debugColors.length]]);
-//                         this.bitblt(resPng, 0, 0, this.width, this.height, rect.x - minx, rect.y - miny);
-//                         resolve(this);
-//                     })
-//                     .on("error", reject)
-//             })
-//         )
-//     }
-//     promise.then(() => {
-//         resPng = resPng.pack()
-//         const bufs = [];
-//         resPng.on('data', (d) => bufs.push(d));
-//         resPng.on('end', () => {
-//             console.log("--- ", new Date().getTime() - time)
-//             return screenBytesCallback(Buffer.concat(bufs));
-//         })
-//     });
-// }
 
 function debugBorder(png, color) {
     const r = (color >> 16) & 0xFF;
