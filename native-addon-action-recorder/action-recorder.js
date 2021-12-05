@@ -2,11 +2,9 @@ const screener = require('screener');
 const hooker = require('hooker');
 const pngjs = require('pngjs');
 const buffer = require('buffer');
-const stream = require('stream');
 
 const PNG = pngjs.PNG;
 const Buffer = buffer.Buffer;
-const Readable = stream.Readable;
 
 const debugColors = [0x0000ff, 0x00ff00, 0xff0000];
 let debugPathCounter = 0;
