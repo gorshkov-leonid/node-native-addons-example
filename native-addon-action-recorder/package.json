@@ -1,0 +1,14 @@
+{
+  "name": "action-recorder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "action-recorder.js",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pngjs": "^6.0.0",
+    "hooker": "../native-addon-hooker_node-addon-api",
+    "screener": "../native-addon-screener"
+  }
+}

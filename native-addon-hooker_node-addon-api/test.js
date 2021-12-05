@@ -1,14 +1,20 @@
 var hooker = require('./hooker.js');
 
 hooker.addHook(
-    function (obj) {
-        console.log(obj);
+    //error
+    function (err) {
+        console.error("Error", err);
     },
-    function (obj) {
-        console.log(obj);
+    //ok
+    function () {
+        console.log("Completed");
     },
-    function (obj) {
-        console.log(obj);
+    //progress
+    /**
+     * @param event {clickX, clickY, rects: [{x,y,width,height}...]}
+     */
+    function (event) {
+        console.log(event);
     },
     8240
 )
