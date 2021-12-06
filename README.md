@@ -3,7 +3,7 @@
 
 > If you have problem,  try to run it manually from C:\Users\\{user}\\.windows-build-tools
 * npm install -g node-gyp
-* npm install
+* npm install --debug
 
 ## Support in Intellij Clion
 * `node-gyp configure -- -f cmake`
