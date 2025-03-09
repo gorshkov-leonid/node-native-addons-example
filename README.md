@@ -15,6 +15,7 @@
 * Right click on `build/Debug/CMakeLists.txt` or  `build/Release/CMakeLists.txt` and choose `Load CMake Project`
 * Copy and save these files in other place because `npm install` clears them
 
+https://github.com/nodejs/node-addon-api/issues/473
 
 # trash 
 https://docs.google.com/document/d/10gmf1VVaLqrseLXBTBbRJ5P9o-OnjM0CCTcN9LGYSZE/edit#heading=h.83jsfybxcnut
